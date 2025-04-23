@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WDC 2023_2024</title>
+  <title>WDC 2023-24</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,8 +15,7 @@
       background-color: #2c3e50;
       color: white;
       text-align: center;
-      padding: 10px 20px;
-      margin-top: 0%;
+      padding: 30px 20px;
     }
 
     header h1 {
@@ -39,7 +38,6 @@
       padding: 25px;
       border-radius: 8px;
       box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-      overflow-x: auto;
     }
 
     label {
@@ -54,11 +52,18 @@
       min-width: 150px;
     }
 
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
       table-layout: auto;
+      min-width: 1000px;
     }
 
     th, td {
@@ -98,12 +103,43 @@
       color: #2c3e50;
       text-decoration: underline;
     }
+
+    .pagination {
+      text-align: right;
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pagination select {
+      margin-left: auto;
+    }
+
+    .pagination-buttons {
+      margin-top: 10px;
+    }
+
+    .pagination-buttons button {
+      padding: 6px 12px;
+      margin-left: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+
+    .pagination-buttons button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Karnata State Womens Development Corporation</h1>
+  <h1>Karnataka State Womens Development Corporation</h1>
   <h2>2023-24 Scheme Paid Beneficiary Details</h2>
 </header>
 
@@ -123,28 +159,44 @@
     <option value="">All Schemes</option>
   </select>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>District</th>
-        <th>Taluk</th>
-        <th>Scheme</th>
-        <th>Application Ref No</th>
-        <th>Beneficiary ID</th>
-        <th>Beneficiary Name</th>
-        <th>Account Holder Name</th>
-        <th>Bank</th>
-        <th>Account Number</th>
-        <th>Amount Paid</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="pagination">
+    <span>Rows per page:</span>
+    <select id="rowsPerPage">
+      <option value="10">10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+    </select>
+  </div>
+
+  <div class="table-wrapper">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>District</th>
+          <th>Taluk</th>
+          <th>Scheme</th>
+          <th>Application Ref No</th>
+          <th>Beneficiary ID</th>
+          <th>Beneficiary Name</th>
+          <th>Account Holder Name</th>
+          <th>Bank</th>
+          <th>Account Number</th>
+          <th>Amount Paid</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="pagination-buttons">
+    <button id="prevBtn">Previous</button>
+    <button id="nextBtn">Next</button>
+  </div>
 
   <p id="noData" class="no-data" style="display: none;">No matching data found.</p>
 
   <p class="note">
-    <strong>Note:</strong> This is not the official website of KSWDC. This page is intended solely for internal reference by WDC employees to verify scheme payment status. For official information.
+    <strong>Note:</strong> This is not the official website of KSWDC. This page is intended solely for internal reference by WDC employees to verify scheme payment status. For official information, please visit the <a href="https://kswdc.org" target="_blank">KSWDC website</a>.
   </p>
 </div>
 
@@ -156,12 +208,19 @@
   const districtSelect = document.getElementById('district');
   const talukSelect = document.getElementById('taluk');
   const schemeSelect = document.getElementById('scheme');
+  const rowsPerPageSelect = document.getElementById('rowsPerPage');
   const tableBody = document.querySelector('#dataTable tbody');
   const noData = document.getElementById('noData');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
 
   let sheetData = [];
+  let filteredData = [];
   let districtTalukMap = {};
   let schemeSet = new Set();
+
+  let currentPage = 1;
+  let rowsPerPage = parseInt(rowsPerPageSelect.value);
 
   fetch(url)
     .then(res => res.text())
@@ -173,7 +232,7 @@
       buildDistrictTalukMap(sheetData);
       populateDistrictDropdown();
       populateSchemeDropdown();
-      renderTable(sheetData);
+      filterData();
 
       districtSelect.addEventListener('change', () => {
         updateTalukDropdown();
@@ -182,6 +241,25 @@
 
       talukSelect.addEventListener('change', filterData);
       schemeSelect.addEventListener('change', filterData);
+      rowsPerPageSelect.addEventListener('change', () => {
+        rowsPerPage = parseInt(rowsPerPageSelect.value);
+        currentPage = 1;
+        renderTable(filteredData);
+      });
+
+      prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable(filteredData);
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (currentPage * rowsPerPage < filteredData.length) {
+          currentPage++;
+          renderTable(filteredData);
+        }
+      });
     });
 
   function buildDistrictTalukMap(data) {
@@ -230,13 +308,35 @@
     });
   }
 
+  function filterData() {
+    const district = districtSelect.value;
+    const taluk = talukSelect.value;
+    const scheme = schemeSelect.value;
+
+    filteredData = sheetData.filter(row => {
+      const districtMatch = !district || row[0] === district;
+      const talukMatch = !taluk || row[1] === taluk;
+      const schemeMatch = !scheme || row[2] === scheme;
+      return districtMatch && talukMatch && schemeMatch;
+    });
+
+    currentPage = 1;
+    renderTable(filteredData);
+  }
+
   function renderTable(data) {
     tableBody.innerHTML = '';
     if (data.length === 0) {
       noData.style.display = 'block';
       return;
     }
-    data.forEach(row => {
+    noData.style.display = 'none';
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = data.slice(start, end);
+
+    pageData.forEach(row => {
       const tr = document.createElement('tr');
       row.forEach(cell => {
         const td = document.createElement('td');
@@ -245,22 +345,9 @@
       });
       tableBody.appendChild(tr);
     });
-    noData.style.display = 'none';
-  }
 
-  function filterData() {
-    const district = districtSelect.value;
-    const taluk = talukSelect.value;
-    const scheme = schemeSelect.value;
-
-    const filtered = sheetData.filter(row => {
-      const districtMatch = !district || row[0] === district;
-      const talukMatch = !taluk || row[1] === taluk;
-      const schemeMatch = !scheme || row[2] === scheme;
-      return districtMatch && talukMatch && schemeMatch;
-    });
-
-    renderTable(filtered);
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage * rowsPerPage >= data.length;
   }
 </script>
 
