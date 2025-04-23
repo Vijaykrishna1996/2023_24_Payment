@@ -3,72 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>KSWDC 2023-24 Scheme Paid Beneficiary Details</title>
+  <title>WDC 2023_2024</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f7f6;
       margin: 0;
     }
+
     header {
       background-color: #2c3e50;
       color: white;
       text-align: center;
-      padding:10px;
-    }
-    h2 {
-      background-color: #0ba1ac;
-      color: rgb(250, 248, 249);
-      text-align: center;
-      padding:10px;
+      padding: 10px 20px;
       margin-top: 0%;
     }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      letter-spacing: 1px;
+    }
+
+    header h2 {
+      margin: 10px 0 0;
+      font-size: 1.4rem;
+      font-weight: normal;
+      opacity: 0.85;
+    }
+
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 30px auto;
       background: #fff;
-      padding: 20px;
+      padding: 25px;
       border-radius: 8px;
       box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+      overflow-x: auto;
     }
+
+    label {
+      font-weight: 500;
+    }
+
     select {
       padding: 10px;
       margin: 10px 10px 10px 0;
       border-radius: 4px;
       border: 1px solid #ccc;
+      min-width: 150px;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
+      table-layout: auto;
     }
+
     th, td {
-      padding: 10px;
+      padding: 12px 15px;
       border-bottom: 1px solid #ddd;
+      text-align: left;
+      white-space: nowrap;
     }
+
     th {
       background-color: #2c3e50;
       color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
     }
+
     tr:nth-child(even) {
       background-color: #f9f9f9;
     }
+
     .no-data {
       color: red;
       text-align: center;
       font-weight: bold;
+      padding: 20px;
+    }
+
+    .note {
+      margin-top: 30px;
+      font-style: italic;
+      color: #555;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .note a {
+      color: #2c3e50;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Karnataka State Womens Development Corporation</h1>
-</header>
-
-<header2>
+  <h1>Karnata State Womens Development Corporation</h1>
   <h2>2023-24 Scheme Paid Beneficiary Details</h2>
-</header2>
+</header>
 
 <div class="container">
   <label for="district">District:</label>
@@ -105,6 +142,10 @@
   </table>
 
   <p id="noData" class="no-data" style="display: none;">No matching data found.</p>
+
+  <p class="note">
+    <strong>Note:</strong> This is not the official website of KSWDC. This page is intended solely for internal reference by WDC employees to verify scheme payment status. For official information.
+  </p>
 </div>
 
 <script>
@@ -222,9 +263,6 @@
     renderTable(filtered);
   }
 </script>
-<p style="margin-top: 30px; font-style: italic; color: #555; text-align: center;">
-  <strong>Note:</strong> This is not the official website of KSWDC. This page is intended solely for internal reference by WDC employees to verify scheme payment status. For official information, please contact Head Office.
-</p>
+
 </body>
 </html>
-
