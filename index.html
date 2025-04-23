@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KSWDC 2023-24 Scheme Paid Beneficiary Details</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f7f6;
+      margin: 0;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    }
+    select {
+      padding: 10px;
+      margin: 10px 10px 10px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #2c3e50;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .no-data {
+      color: red;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>KSWDC</h1>
+  <h2>2023-24 Scheme Paid Beneficiary Details</h2>
+</header>
+
+<div class="container">
+  <label for="district">District:</label>
+  <select id="district">
+    <option value="">All Districts</option>
+  </select>
+
+  <label for="taluk">Taluk:</label>
+  <select id="taluk">
+    <option value="">All Taluks</option>
+  </select>
+
+  <label for="scheme">Scheme:</label>
+  <select id="scheme">
+    <option value="">All Schemes</option>
+  </select>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>District</th>
+        <th>Taluk</th>
+        <th>Scheme</th>
+        <th>Application Ref No</th>
+        <th>Beneficiary ID</th>
+        <th>Beneficiary Name</th>
+        <th>Account Holder Name</th>
+        <th>Bank</th>
+        <th>Account Number</th>
+        <th>Amount Paid</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <p id="noData" class="no-data" style="display: none;">No matching data found.</p>
+</div>
+
+<script>
+  const sheetId = '1BH90XoKL3VlNgqJTIFt-SUfHYnqk7Qyy';
+  const gid = '844168366';
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&gid=${gid}`;
+
+  const districtSelect = document.getElementById('district');
+  const talukSelect = document.getElementById('taluk');
+  const schemeSelect = document.getElementById('scheme');
+  const tableBody = document.querySelector('#dataTable tbody');
+  const noData = document.getElementById('noData');
+
+  let sheetData = [];
+  let districtTalukMap = {};
+  let schemeSet = new Set();
+
+  fetch(url)
+    .then(res => res.text())
+    .then(text => {
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      const rows = json.table.rows;
+
+      sheetData = rows.map(r => r.c.map(c => (c ? c.v : '')));
+      buildDistrictTalukMap(sheetData);
+      populateDistrictDropdown();
+      populateSchemeDropdown();
+      renderTable(sheetData);
+
+      districtSelect.addEventListener('change', () => {
+        updateTalukDropdown();
+        filterData();
+      });
+
+      talukSelect.addEventListener('change', filterData);
+      schemeSelect.addEventListener('change', filterData);
+    });
+
+  function buildDistrictTalukMap(data) {
+    data.forEach(row => {
+      const district = row[0];
+      const taluk = row[1];
+      const scheme = row[2];
+      if (!districtTalukMap[district]) {
+        districtTalukMap[district] = new Set();
+      }
+      if (taluk) districtTalukMap[district].add(taluk);
+      if (scheme) schemeSet.add(scheme);
+    });
+  }
+
+  function populateDistrictDropdown() {
+    const districts = Object.keys(districtTalukMap).sort();
+    districts.forEach(dist => {
+      const option = document.createElement('option');
+      option.value = dist;
+      option.textContent = dist;
+      districtSelect.appendChild(option);
+    });
+  }
+
+  function updateTalukDropdown() {
+    const selectedDistrict = districtSelect.value;
+    talukSelect.innerHTML = '<option value="">All Taluks</option>';
+
+    if (selectedDistrict && districtTalukMap[selectedDistrict]) {
+      [...districtTalukMap[selectedDistrict]].sort().forEach(taluk => {
+        const option = document.createElement('option');
+        option.value = taluk;
+        option.textContent = taluk;
+        talukSelect.appendChild(option);
+      });
+    }
+  }
+
+  function populateSchemeDropdown() {
+    [...schemeSet].sort().forEach(scheme => {
+      const option = document.createElement('option');
+      option.value = scheme;
+      option.textContent = scheme;
+      schemeSelect.appendChild(option);
+    });
+  }
+
+  function renderTable(data) {
+    tableBody.innerHTML = '';
+    if (data.length === 0) {
+      noData.style.display = 'block';
+      return;
+    }
+    data.forEach(row => {
+      const tr = document.createElement('tr');
+      row.forEach(cell => {
+        const td = document.createElement('td');
+        td.textContent = cell;
+        tr.appendChild(td);
+      });
+      tableBody.appendChild(tr);
+    });
+    noData.style.display = 'none';
+  }
+
+  function filterData() {
+    const district = districtSelect.value;
+    const taluk = talukSelect.value;
+    const scheme = schemeSelect.value;
+
+    const filtered = sheetData.filter(row => {
+      const districtMatch = !district || row[0] === district;
+      const talukMatch = !taluk || row[1] === taluk;
+      const schemeMatch = !scheme || row[2] === scheme;
+      return districtMatch && talukMatch && schemeMatch;
+    });
+
+    renderTable(filtered);
+  }
+</script>
+
+</body>
+</html>
